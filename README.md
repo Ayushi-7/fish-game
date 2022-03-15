@@ -1,6 +1,5 @@
 # fish-game
 README.txt
-Project1 involves making "Hey! That's my fish" game
 
 Overview/description of the overall structure of the program:
 
