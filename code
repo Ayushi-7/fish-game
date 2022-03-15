@@ -1,0 +1,884 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct Grid {
+    char data;
+    struct Grid *up;
+    struct Grid *down;
+    struct Grid *left;
+    struct Grid *right;
+    struct Grid *upLeft;
+    struct Grid *upRight;
+    struct Grid *downLeft;
+    struct Grid *downRight;
+};
+
+struct Player {
+    int score;
+};
+
+struct Player * initPlayer(){
+    struct Player *playerScore = (struct Player *)calloc(40, sizeof(struct Player));
+
+    for(int i = 0; i < 40; i++){
+        playerScore[i].score = 0;
+    }
+}
+
+struct AI {
+    int score;
+};
+
+struct AI * initAI(){
+    struct AI *AIScore = (struct AI *)calloc(40, sizeof(struct AI));
+
+    for(int i = 0; i < 40; i++){
+        AIScore[i].score = 0;
+    }
+}
+
+
+/* The following function initialises and prints the board when the game begins. 
+   It allocates a memory through a calloc for 36 items for a 6 X 6 game board. 
+   It returns the initialized fish board.
+*/
+struct Grid *initBoard(){
+
+    struct Grid *fishBoard = (struct Grid *)calloc(36, sizeof(struct Grid));
+
+    for(int i = 0; i < 6; i++){ // 1
+        fishBoard[i].data = '1';
+    }
+
+    for(int i = 6; i < 31; i = i + 6){  //1
+        fishBoard[i].data = '1';
+    }
+    
+    for(int i = 31; i < 36; i++){ //1
+        fishBoard[i].data = '1';
+    }
+
+    for(int i = 11; i < 35; i = i + 6){ //1
+        fishBoard[i].data = '1';
+    }
+
+    for(int i = 7; i < 11; i++){ //2
+        fishBoard[i].data = '2';
+    }
+
+    for(int i = 13; i < 26; i = i + 6){ //2
+        fishBoard[i].data = '2';
+    }
+
+    for(int i = 16; i < 29; i = i + 6){ //2
+        fishBoard[i].data = '2';
+    }
+
+    for(int i = 26; i < 29; i++){ //2
+        fishBoard[i].data = '2';
+    }
+
+    //3
+    fishBoard[14].data = '3';
+    fishBoard[15].data = '3';
+    fishBoard[20].data = '3';
+    fishBoard[21].data = '3';
+    fishBoard[0].data = 'P'; //places the player at the 0 index of the fishBoard
+    fishBoard[34].data = 'A'; //places the AI at the 34th index of the fishBoard
+
+    // for(int i = 0; i < 6; i++){
+    //     fishBoard[i].up = NULL;
+    // }
+    // for(int i = 30; i < 36; i++){
+    //     fishBoard[i].down = NULL;
+    // }
+    // for(int i = 0; i < 31; i = i + 6){
+    //     fishBoard[i].left = NULL;
+    // }
+    // for(int i = 5; i < 36; i = i + 6){
+    //     fishBoard[i].right = NULL;
+    // }
+
+    return fishBoard;
+}
+
+
+/*This function checks if the given index of the fishBoard is a valid move. If the 
+given index contains . or P or A, the move is declared invalid.*/
+
+int isValid(char * dir, int step, struct Grid *fishBoard, int isAI){
+    // if (coordinateOutOfBounds() != 0){
+
+    // }
+    int k = 0;
+
+    if(isAI == 0){
+        for(int i = 0; i <36; i++){
+            if(fishBoard[k].data == 'P'){
+                break;
+            }
+            k++;
+        }       
+    } //finds the current position of the player.
+    else{
+        for(int i = 0; i <36; i++){
+            if(fishBoard[k].data == 'A'){
+                break;
+            }
+            k++;
+        }
+    }//finds the current position of the AI.
+
+    
+    if (strcmp(dir, "up") == 0){
+        for(int i = k - 6; i >= 0 && i > k - step*6 - 1; i = i-6){
+            if(fishBoard[i].data == '.' || fishBoard[i].data == 'A' || fishBoard[i].data == 'P'){
+                printf("Input is invalid.\n");
+                return 1;
+            }
+        }        
+    }
+
+    if (strcmp(dir, "down") == 0){
+        for(int i = k + 6; i <= 35 && i < k + step*6 + 1; i = i+6){
+            if(fishBoard[i].data == '.' || fishBoard[i].data == 'A' || fishBoard[i].data == 'P'){
+                printf("Input is invalid.\n");
+                return 1;    
+            }
+        }
+    }
+
+    if (strcmp(dir, "left") == 0){
+        for(int i = k - 1; i > k - step - 1; i--){
+            if(fishBoard[i].data == '.' || fishBoard[i].data == 'A' || fishBoard[i].data == 'P'){
+                printf("Input is invalid   .\n");
+                return 1;
+            }
+        }
+    }   
+
+    if (strcmp(dir, "right") == 0){
+        for(int i = k + 1; i < k + step + 1; i++){
+            if(fishBoard[i].data == '.' || fishBoard[i].data == 'A' || fishBoard[i].data == 'P'){
+                printf("Input is invalid.\n");
+                return 1;
+            }    
+        }
+    }
+
+    if (strcmp(dir, "downLeft") == 0){
+        for(int i = k + 5 ; i < k + step*5 + 1; i = i+5){
+            if(fishBoard[i].data == '.' || fishBoard[i].data == 'A' || fishBoard[i].data == 'P'){
+                printf("Input is invalid.\n");
+                return 1;
+            }
+        }
+    }  
+
+    if (strcmp(dir, "downRight") == 0){
+        for(int i = k + 7; i < k + step*7 + 1; i = i+7){
+            if(fishBoard[i].data == '.' || fishBoard[i].data == 'A' || fishBoard[i].data == 'P'){
+                printf("Input is invalid.\n");
+                return 1;
+            }
+        }
+    }     
+
+    if (strcmp(dir, "upRight") == 0){
+        for(int i = k - 5; i > k - step*5 - 1; i = i-5){
+            if(fishBoard[i].data == '.' || fishBoard[i].data == 'A' || fishBoard[i].data == 'P'){
+                printf("Input is invalid.\n");
+                return 1;
+            }   
+        }    
+    }
+
+    if (strcmp(dir, "upLeft") == 0){
+        for(int i = k - 7; i > k - step*7 - 1; i = i - 7){
+            if(fishBoard[i].data == '.' || fishBoard[i].data == 'A' || fishBoard[i].data == 'P'){
+                printf("Input is invalid.\n");
+                return 1;
+            }    
+        }       
+    }  
+    
+    return 0;
+}
+
+/* The following 8 functions link the board in all the 8 directions for each element.  
+*/
+
+void up(struct Grid *fishBoard){
+    for(int i = 6; i < 36; i++){
+        fishBoard[i].up = &fishBoard[i-6];
+    }
+}
+
+void down(struct Grid *fishBoard){
+    for(int i = 0; i < 30; i++){
+        fishBoard[i].down = &fishBoard[i+6];
+    }
+}
+
+void left(struct Grid *fishBoard){
+    for(int i = 0; i < 36 && i % 6 != 0; i++){
+        fishBoard[i].left = &fishBoard[i-1];
+    }
+}
+
+void right(struct Grid *fishBoard){
+    for(int i = 0; i < 36 && i % 6 != 5; i++){
+        fishBoard[i].right = &fishBoard[i+1];
+    }
+}
+
+void upLeft(struct Grid *fishBoard){
+    for(int i = 7; i < 36 && i % 6 != 0; i++){
+        fishBoard[i].upLeft = &fishBoard[i-7];
+    }
+}
+
+void upRight(struct Grid * fishBoard){
+    for(int i = 6; i < 36 && i % 5 != 0; i++){
+        fishBoard[i].upRight = &fishBoard[i-5];
+    }
+}
+
+void downLeft(struct Grid *fishBoard){
+    for(int i = 1; i < 30 && i % 6 != 0; i++){
+        fishBoard[i].downLeft = &fishBoard[i+5];
+    }
+}
+
+void downRight(struct Grid *fishBoard){
+    for(int i = 0; i < 29 && i % 5 != 0; i++){
+        fishBoard[i].downRight = &fishBoard[i+7];
+    }
+}
+
+/*This function prints the whole 6 X 6 board and displays the status of the game after every move.*/
+
+void printBoard(struct Grid *fishBoard){
+    for(int i = 0; i < 31; i=i+6){
+      for(int j = 0 ; j < 6 ; j++ ) {
+          printf("%c",fishBoard[i + j].data);
+      }
+      printf("\n"); //prints a new line after each row
+    }
+}
+/*This function checks if the entered index is out of bounds for the 6 X 6 board.*/
+int coordinateOutOfBounds(int i){
+    if (i < 0 || i > 35){
+        return 0; 
+    }
+    else{
+        return 1;
+    }
+}
+
+/*After receiving input from the player, this function updates the fishBoard with a '.' for 
+the existing player position and 'P' for the new position of the player. It also shows the 
+status of the fishBoard by printing it after every move.*/
+
+void updateBoardP(char * dir, int step, struct Grid *fishBoard, struct Player *playerScore){
+
+    int k = 0;
+    for(int i = 0; i <36; i++){
+        if(fishBoard[k].data == 'P'){
+            break;
+        }
+        k++;
+    } //calculates the index at which the player is situated in the fishBoard
+
+    // fishBoard[k].data = playerScore[0].score ;
+
+    if(isValid(dir, step, fishBoard, 0) == 0){ // checks if the input is valid
+
+        //finds the direction in which the player wants to move and updates the board with the new move.
+        if (strcmp(dir, "up") == 0){  
+            for(int i = 0; i < 40; i++){
+                if(playerScore[i].score == 0){
+                    if(fishBoard[k - step*6].data == '1'){
+                        playerScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k - step*6].data == '2'){
+                        playerScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k - step*6].data == '3'){
+                        playerScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k - step*6].data = 'P'; //updates the new position with P
+            fishBoard[k].data = '.'; //updates the earlier position of the P with a '.'
+        }
+        else if (strcmp(dir, "down") == 0){
+            for(int i = 0; i < 40; i++){
+                if(playerScore[i].score == 0){
+                    if(fishBoard[k + step*6].data == '1'){
+                        playerScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k + step*6].data == '2'){
+                        playerScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k + step*6].data == '3'){
+                        playerScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k].data = '.';
+            fishBoard[k + step*6].data = 'P';
+        }
+        else if (strcmp(dir, "left") == 0){
+            for(int i = 0; i < 40; i++){
+                if(playerScore[i].score == 0){
+                    if(fishBoard[k - step].data == '1'){
+                        playerScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k - step].data == '2'){
+                        playerScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k - step].data == '3'){
+                        playerScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k - step].data = 'P';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "right") == 0){
+            for(int i = 0; i < 40; i++){
+                if(playerScore[i].score == 0){
+                    if(fishBoard[k + step].data == '1'){
+                        playerScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k + step].data == '2'){
+                        playerScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k + step].data == '3'){
+                        playerScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k + step].data = 'P';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "upLeft") == 0){
+            for(int i = 0; i < 40; i++){
+                if(playerScore[i].score == 0){
+                    if(fishBoard[k - step*7].data == '1'){
+                        playerScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k - step*7].data == '2'){
+                        playerScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k - step*7].data == '3'){
+                        playerScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k -step*7].data = 'P';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "upRight") == 0){
+            for(int i = 0; i < 40; i++){
+                if(playerScore[i].score == 0){
+                    if(fishBoard[k - step*5].data == '1'){
+                        playerScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k - step*5].data == '2'){
+                        playerScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k - step*5].data == '3'){
+                        playerScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k -step*5].data = 'P';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "downLeft") == 0){
+            for(int i = 0; i < 40; i++){
+                if(playerScore[i].score == 0){
+                    if(fishBoard[k + step*5].data == '1'){
+                        playerScore[i].score = 1; 
+                        break;
+                    }
+                    if(fishBoard[k + step*5].data == '2'){
+                        playerScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k + step*5].data == '3'){
+                        playerScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k + step*5].data = 'P';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "downRight") == 0){
+            for(int i = 0; i < 40; i++){
+                if(playerScore[i].score == 0){
+                    if(fishBoard[k + step*7].data == '1'){
+                        playerScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k + step*7].data == '2'){
+                        playerScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k + step*7].data == '3'){
+                        playerScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k + step*7].data = 'P';
+            fishBoard[k].data = '.';
+        }
+    }
+        
+    printBoard(fishBoard); //prints the updated board
+}
+
+/*Moves the AI to the calculated highest position and stores the score
+*/
+void updateBoardAI(char * dir, int step, struct Grid *fishBoard, struct AI *AIScore){
+    int k = 0;
+    for(int i = 0; i <36; i++){
+        if(fishBoard[k].data == 'A'){
+            break;
+        }
+        k++;
+    } //calculates the index at which the AI is situated in the fishBoard
+
+    //finds the direction in which the AI wants to move and updates the board with the new move.
+    if(isValid(dir, step, fishBoard, 1) == 0){
+        if (strcmp(dir, "up") == 0){ 
+            for(int i = 0; i < 40; i++){
+                if(AIScore[i].score == 0){
+                    if(fishBoard[k - step*6].data == '1'){
+                        AIScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k - step*6].data == '2'){
+                        AIScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k - step*6].data == '3'){
+                        AIScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k - step*6].data = 'A'; //updates the new position with AI
+            fishBoard[k].data = '.'; //updates the earlier position of the AI with a '.'
+        }
+        else if (strcmp(dir, "down") == 0){
+            for(int i = 0; i < 40; i++){
+                if(AIScore[i].score == 0){
+                    if(fishBoard[k + step*6].data == '1'){
+                        AIScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k + step*6].data == '2'){
+                        AIScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k + step*6].data == '3'){
+                        AIScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k].data = '.';
+            fishBoard[k + step*6].data = 'A';
+        }
+        else if (strcmp(dir, "left") == 0){
+            for(int i = 0; i < 40; i++){
+                if(AIScore[i].score == 0){
+                    if(fishBoard[k - step].data == '1'){
+                        AIScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k - step].data == '2'){
+                        AIScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k - step].data == '3'){
+                        AIScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k - step].data = 'A';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "right") == 0){
+            for(int i = 0; i < 40; i++){
+                if(AIScore[i].score == 0){
+                    if(fishBoard[k + step].data == '1'){
+                        AIScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k + step].data == '2'){
+                        AIScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k + step].data == '3'){
+                        AIScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k + step].data = 'A';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "upLeft") == 0){
+            for(int i = 0; i < 40; i++){
+                if(AIScore[i].score == 0){
+                    if(fishBoard[k - step*7].data == '1'){
+                        AIScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k - step*7].data == '2'){
+                        AIScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k - step*7].data == '3'){
+                        AIScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k -step*7].data = 'A';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "upRight") == 0){
+            for(int i = 0; i < 40; i++){
+                if(AIScore[i].score == 0){
+                    if(fishBoard[k - step*5].data == '1'){
+                        AIScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k - step*5].data == '2'){
+                        AIScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k - step*5].data == '3'){
+                        AIScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k -step*5].data = 'A';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "downLeft") == 0){
+            for(int i = 0; i < 40; i++){
+                if(AIScore[i].score == 0){
+                    if(fishBoard[k + step*5].data == '1'){
+                        AIScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k + step*5].data == '2'){
+                        AIScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k + step*5].data == '3'){
+                        AIScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k + step*5].data = 'A';
+            fishBoard[k].data = '.';
+        }
+        else if (strcmp(dir, "downRight") == 0){
+            for(int i = 0; i < 40; i++){
+                if(AIScore[i].score == 0){
+                    if(fishBoard[k + step*7].data == '1'){
+                        AIScore[i].score = 1;
+                        break;
+                    }
+                    if(fishBoard[k + step*7].data == '2'){
+                        AIScore[i].score = 2;
+                        break;
+                    }
+                    if(fishBoard[k + step*7].data == '3'){
+                        AIScore[i].score = 3;
+                        break;
+                    }
+                }
+            }
+            fishBoard[k + step*7].data = 'A';
+            fishBoard[k].data = '.';
+        }
+
+    }    
+    printBoard(fishBoard); //prints the updated board
+    printf("\n");
+}
+
+/*The AIMove method calculates the best direction and number of steps for the AI to move*/
+
+void aiMove(struct Grid *fishBoard, struct AI *AIScore){
+
+    char maxNum = '0'; //stores the max possible char value
+    char * maxDir = ""; //stores the max possible direction
+    int k = 0; //stores the current AI position
+    int Maxstep = 0; //stores the number of steps 
+    for(int i = 0; i <36; i++){
+        if(fishBoard[k].data == 'A'){
+            break;
+        }
+        k++;
+    } //computes existing AI position
+        
+    //up
+    int step = 1;
+    for(int i = k - 6; i >= 0; i = i-6){
+        if(isValid("up", (k - i)/6 , fishBoard, 1) == 0){ //checks whether the up move is valid or not 
+            if(fishBoard[i].data > maxNum){ //compares the char at i position and maxNum to determine which is bigger('1' or'2' or '3')
+                maxNum = fishBoard[i].data; //updates the maximum value 
+                maxDir = "up"; //updates the maximum direction
+                Maxstep = step; // updates the number of steps in that direction
+                step++; //adds 1 step for the next move if it is declared valid
+            }   
+        break;                          
+        }
+    }
+
+    step = 1;
+    //down
+    for(int i = k + 6; i <= 35; i = i + 6){
+        if(isValid("down", (i - k)/6 , fishBoard, 1) == 0){ 
+            if(fishBoard[i].data > maxNum){
+                maxNum = fishBoard[i].data;
+                maxDir = "down";  
+                Maxstep = step;
+                step++;
+            }
+        break;
+        }
+    }
+
+    step = 1;
+    //left
+    for(int i = k - 1; i >= k - 6 ; i--){
+        if(isValid("left", 1 , fishBoard, 1) == 0 && fishBoard[i+1].left != NULL){ //null condition makes sure that the loop stops once the row ends
+            if(fishBoard[i].data > maxNum){
+                maxNum = fishBoard[i].data;
+                maxDir = "left";  
+                Maxstep = step;
+                step++;
+            }
+        break;                           
+        }
+    }
+
+    step = 1;
+    //right
+    for(int i = k + 1; i <= 35 ; i++){
+        if(isValid("right", 1 , fishBoard, 1) == 0 && fishBoard[i-1].right != NULL){ 
+            if(fishBoard[i].data > maxNum){
+                maxNum = fishBoard[i].data;
+                maxDir = "right";  
+                Maxstep = step;
+                step++;
+            }
+        break;                           
+        }
+    }
+
+    step = 1;
+    //upLeft
+    for(int i = k - 7; i >= 0 ; i = i - 7){
+        if(isValid("upLeft", (k - i)/7 , fishBoard, 1) == 0){
+            if(fishBoard[i].data > maxNum){
+                maxNum = fishBoard[i].data;
+                maxDir = "upLeft";  
+                Maxstep = step;
+                step++;
+            }
+        break;                           
+        }
+    }
+
+    step = 1;
+    //upRight
+    for(int i = k - 5; i >= 0 ; i = i - 5){
+        if(isValid("upRight", (k - i)/5 , fishBoard, 1) == 0){
+            if(fishBoard[i].data > maxNum){
+                maxNum = fishBoard[i].data;
+                maxDir = "upRight";
+                Maxstep = step;  
+                step++;
+            }  
+        break;                           
+        }
+    }
+
+    step = 1;
+    //downRight
+    for(int i = k + 7; i <= 35 ; i = i + 7){
+        if(isValid("downRight", (i - k)/7 , fishBoard, 1) == 0){
+            if(fishBoard[i].data > maxNum){
+                maxNum = fishBoard[i].data;
+                maxDir = "downRight"; 
+                Maxstep = step;
+                step++; 
+            }  
+        break;                           
+        }
+    }  
+
+    step = 1;
+    //downLeft
+    for(int i = k - 7; i <= 35 ; i = i - 7){
+        if(isValid("downLeft", (i - k)/5 , fishBoard, 1) == 0){
+            if(fishBoard[i].data > maxNum){
+                maxNum = fishBoard[i].data;
+                maxDir = "downLeft";  
+                Maxstep = step;
+                step++;
+            }  
+        break;                           
+        }
+    } 
+    printf("Display board with AI's move: \n");
+    updateBoardAI(maxDir, Maxstep, fishBoard, AIScore); //moves the AI to the calculated max move
+}
+
+//checks whether the AI has any moves left
+int checkGameOverForAI(struct Grid *fishBoard){
+    int a = 0;
+    for(int i = 0; i <36; i++){
+        if(fishBoard[a].data == 'A'){
+            break;
+        }
+        a++;
+    } //calculates the index at which the AI is situated in the fishBoard  
+    
+    //checks in all directions for the AI whether there is any empty spot for it to move.
+    if((fishBoard[a].up == NULL || fishBoard[a].up->data == '.' || fishBoard[a].up->data == 'P') &&
+       (fishBoard[a].down == NULL || fishBoard[a].down->data == '.'|| fishBoard[a].down->data == 'P') &&
+       (fishBoard[a].left == NULL || fishBoard[a].left->data == '.' || fishBoard[a].left->data == 'P') &&
+       (fishBoard[a].right == NULL || fishBoard[a].right->data == '.' || fishBoard[a].right->data == 'P') &&
+       (fishBoard[a].upLeft == NULL || fishBoard[a].upLeft->data == '.' || fishBoard[a].upLeft->data == 'P') &&
+       (fishBoard[a].upRight == NULL || fishBoard[a].upRight->data == '.' || fishBoard[a].upRight->data == 'P') &&
+       (fishBoard[a].downLeft == NULL || fishBoard[a].downLeft->data == '.' || fishBoard[a].downLeft->data == 'P') &&
+       (fishBoard[a].downRight == NULL || fishBoard[a].downRight->data == '.' || fishBoard[a].downRight->data == 'P'))
+    {
+        //printf("Game Over for A \n");
+        return 1; 
+    }
+    printf("Game Over for A \n");
+    return 0;
+}
+
+//checks whether the player has any moves left
+int checkGameOverForPlayer(struct Grid *fishBoard){
+    
+    int p = 0;
+    for(int i = 0; i <36; i++){
+        if(fishBoard[p].data == 'P'){
+            break;
+        }
+        p++;
+    } //calculates the index at which the player is situated in the fishBoard  
+
+    //checks in all directions for the player whether there is any empty spot for it to move.
+      if((fishBoard[p].up == NULL || fishBoard[p].up->data == '.' || fishBoard[p].up->data == 'A') &&
+       (fishBoard[p].down == NULL || fishBoard[p].down->data == '.'|| fishBoard[p].down->data == 'A') &&
+       (fishBoard[p].left == NULL || fishBoard[p].left->data == '.' || fishBoard[p].left->data == 'A') &&
+       (fishBoard[p].right == NULL || fishBoard[p].right->data == '.' || fishBoard[p].right->data == 'A') &&
+       (fishBoard[p].upLeft == NULL || fishBoard[p].upLeft->data == '.' || fishBoard[p].upLeft->data == 'A') &&
+       (fishBoard[p].upRight == NULL || fishBoard[p].upRight->data == '.' || fishBoard[p].upRight->data == 'A') &&
+       (fishBoard[p].downLeft == NULL || fishBoard[p].downLeft->data == '.' || fishBoard[p].downLeft->data == 'A') &&
+       (fishBoard[p].downRight == NULL || fishBoard[p].downRight->data == '.' || fishBoard[p].downRight->data == 'A')){
+           //printf("Game Over for P \n");
+           return 1;
+       }
+       printf("Game Over for P \n");
+       return 0;
+}
+
+int main(int argc, char *argv[]){
+    struct  Grid * board = initBoard();
+    struct Player * myPlayer = initPlayer();
+    struct AI  * myAI = initAI();
+    printBoard(board);
+    
+    char* dir;
+    int step = 0;
+   
+        while(checkGameOverForAI(board) != 0 || checkGameOverForPlayer(board) != 0){    
+            if(checkGameOverForAI(board) == 0 && checkGameOverForPlayer(board) != 0){
+                printf("Enter the direction and number: ");
+                scanf("%s %d", dir, &step);
+                updateBoardP(dir, step, board, myPlayer);
+            }
+            if(checkGameOverForAI(board) != 0 && checkGameOverForPlayer(board) != 0){
+                printf("Enter the direction and number: ");
+                scanf("%s %d", dir, &step);
+                updateBoardP(dir, step, board, myPlayer);
+                aiMove(board, myAI);
+            }
+            if(checkGameOverForAI(board) != 0 && checkGameOverForPlayer(board) == 0){
+                aiMove(board, myAI);
+            }
+        }
+
+        int finalPlayerScore = 0;
+        for(int i = 0; i < 40 ; i++){
+            if(myPlayer[i].score != 0){
+                printf("%i + " , myPlayer[i].score);
+            }
+            finalPlayerScore += myPlayer[i].score ;
+        }
+        printf("\n");
+        printf("final score for player = %i" ,finalPlayerScore);
+
+        int finalAIScore = 0;
+        for(int i = 0; i < 40 ; i++){
+            if(myAI[i].score != 0){
+                printf("%i + " , myAI[i].score);
+            }
+            finalAIScore += myAI[i].score ;
+        }
+        printf("\n");
+        printf("final score for ai = %i" , finalAIScore);
+
+        if(finalPlayerScore > finalAIScore){
+            printf("Player has won");
+        }
+        else if(finalAIScore > finalPlayerScore){
+            printf("Computer has won");
+        }
+        else{
+            printf("Match has ended in a tie");
+        }
+    
+    return 1;
+}
